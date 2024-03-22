@@ -1,0 +1,337 @@
+﻿@{
+    ViewBag.Title = "About";
+}
+<html>
+<head>
+
+    <link href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container">
+        <div class="row main">
+            <div class="panel-heading">
+                <div class="panel-title text-center">
+                    <button type="button" class="btn btn-primary" id="btnAlta" onclick="Alta();">Dar Alta Usuario</button>
+                </div>
+            </div>
+            <div class="panel-heading">
+                <table id="MiTabla" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>IdUsuario</th>
+                            <th>Nombre</th>
+                            <th>Fecha Creación</th>
+                            <th>Usuario</th>
+                            <th>Estatus</th>
+                            <th>Acciones</th>
+                            <th>Operaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    @*<button type="button" class="close" data-dissmiss="modal"><span aria-hidden="true">&times;</span></button>*@
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="IdUsuario">IdUsuario</label>
+                            <input type="text" class="form-control" id="IdUsuario" placeholder="IdUsuario" disabled="disabled" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Nombre">Nombre</label>
+                            <input type="text" class="form-control" id="Nombre" placeholder="Nombre" />
+                        </div>                        
+                        <div class="form-group">
+                            <label for="Usuario">Usuario</label>
+                            <input type="text" class="form-control" id="Usuario" placeholder="Usuario" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Estatus">Estatus</label>
+                            <input type="text" class="form-control" id="Estatus" placeholder="Estatus" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Acciones">Acciones</label>
+                            <input type="text" class="form-control" id="Acciones" placeholder="Acciones" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Password">Password</label>
+                            <input type="text" class="form-control" id="Password" placeholder="Password" />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnAdd" onclick="return Add();">Alta</button>
+                    <button type="button" class="btn btn-primary" id="btnUpdate" style="display:none;" onclick="Update();">Actualizar</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" type="text/javascript"></script>
+    <script src="~/Scripts/dataTables.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {            
+            loadData();
+        });
+
+        function Alta() {
+            $('#myModal').modal('show');          
+            $('#btnAdd').show();
+        }
+        
+        function Delele(ID, Usuario) {
+            var ans = confirm("¿Esta Seguro de eliminar al usuario: " + Usuario+ " ?");
+            if (ans) {
+                $.ajax({
+                    url: "/Home/EliminarUsuario",
+                    type: "POST",
+                    data: { IdUsuario: ID},
+                    success: function (result) {
+                        loadData();
+                    },
+                    error: function (errormessage) {
+                        alert(errormessage.responseText);
+                    }
+                });
+            }
+        }
+
+        function Add() {
+            var res = validate();
+            if (res == false) {
+                return false;
+            }
+
+          
+            var empObj = {               
+                Nombre: $('#Nombre').val(),               
+                Usuario: $('#Usuario').val(),
+                Password: $('#Password').val(),
+                Estatus: $('#Estatus').val(),
+                Acciones: $('#Acciones').val()
+                
+            };
+            //console.log(JSON.stringify(empObj));
+            $.ajax({
+                url: "/Home/AltaUsuario",
+                data: empObj,
+                type: "POST",
+               // contentType: "application/json;charset=utf-8",
+               // dataType: "json",
+                success: function (result) {
+                //    loadData();
+                    $('#myModal').modal('hide');
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+        }
+       
+        function Update() {
+            var res = validate();
+            if (res == false) {
+                return false;
+            }
+            var empObj = {
+                IdUsuario: $('#IdUsuario').val(),
+                Nombre: $('#Nombre').val(),
+                Usuario: $('#Usuario').val(),
+                Password: $('#Password').val(),
+                Estatus: $('#Estatus').val(),
+                Acciones: $('#Acciones').val()
+            };
+            $.ajax({
+                url: "/Home/ActualizacionUsuario",
+                data: empObj,
+                type: "POST",                
+                success: function (result) {                 
+                   
+                    $('#myModal').modal('hide');                   
+                    $('#IdUsuario').val("");
+                    $('#Nombre').val("");                
+                    $('#Usuario').val("");
+                    $('#Estatus').val("");
+                    $('#Acciones').val("");
+                    $('#Password').val("");
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+        }
+       
+        function validate() {
+            
+            var isValid = true;
+            if ($('#Nombre').val().trim() == "") {
+                $('#Nombre').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Nombre').css('border-color', 'lightgrey');
+            }           
+            if ($('#Usuario').val().trim() == "") {
+                $('#Usuario').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Usuario').css('border-color', 'lightgrey');
+            }
+            if ($('#Estatus').val().trim() == "") {
+                $('#Estatus').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Estatus').css('border-color', 'lightgrey');
+            }
+            if ($('#Acciones').val().trim() == "") {
+                $('#Acciones').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Acciones').css('border-color', 'lightgrey');
+            }
+            if ($('#Password').val().trim() == "") {
+                $('#Password').css('border-color', 'Red');
+
+                isValid = false;
+            }
+            else {
+                if (!ValidatePassword()) {
+                    isValid = false;
+                }
+                else { $('#Password').css('border-color', 'lightgrey');}
+               
+            }
+            return isValid;
+        }
+
+        function loadData() {
+            console.log("Entro a loadData");            
+            var table = new DataTable('#MiTabla', {
+                lengthMenu: [[10], [10]],
+                "processing": true,
+                "serverSide": true,
+                ajax: {
+                    type: "POST",
+                    url: "/Home/List",
+                    dataType: "json",                    
+                },
+                "pageLength": 10,
+                "filter": true,
+                "data": null,
+                "columns": [
+                    { "data": "IdUsuario" },
+                    { "data": "Nombre" },
+                    { "data": "Fecha_Creacion" },
+                    { "data": "Usuario" },
+                    { "data": "Estatus" },
+                    { "data": "Acciones" },
+                    {
+                        defaultContent: '<input type="button" class="Editar" value="Editar"/><input type="button" class="Eliminar" value="Eliminar"/>'
+
+                    },
+                    /* {
+                         "defaultContent": "<td>data.IdUsuario <a href=\"#\" onclick=\"return getbyID()\">Editar</a> | <a href=\"#\" onclick=\"Borrar(' + item.EmployeeID + ')\">Borrar</a></td>"
+                         //    "<button id = 'teste' type= 'button' class = 'btn btn-ligth-primary'>Prueba</button>"
+                     },*/
+
+                ],
+                "language": {
+                    "url": "http://cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Spanish.json"
+                }
+
+            });
+
+            $('#MiTabla tbody').on('click', '.Editar', function () {
+
+                var row = $(this).closest('tr');
+
+                //  var data = table.row(row).data().IdUsuario;
+
+                $('#IdUsuario').val(table.row(row).data().IdUsuario);
+                $('#Nombre').val(table.row(row).data().Nombre);
+                // $('#Fecha_Creacion').val(table.row(row).data().Fecha_Creacion);
+                $('#Usuario').val(table.row(row).data().Usuario);
+                $('#Estatus').val(table.row(row).data().Estatus);
+                $('#Acciones').val(table.row(row).data().Acciones);
+                $('#Password').val(table.row(row).data().Password);
+                $('#myModalLabel').val("Editar Usuario");
+
+                $('#myModal').modal('show');
+                $('#btnUpdate').show();
+                $('#btnAdd').hide();
+            });
+
+
+            $('#MiTabla tbody').on('click', '.Eliminar', function () {
+                var row = $(this).closest('tr');
+
+                //var data = table.row(row).data().IdUsuario;
+                Delele(table.row(row).data().IdUsuario, table.row(row).data().Usuario)
+            });
+        }
+
+        function ValidatePassword() {
+            var numSucc = 0;
+            if ($('#Password').val() !== "") {
+                if ($('#Password').val().length >= 8) {
+                    numSucc = numSucc + 1;
+                   
+                } else {
+                    confirm("Su password debe contener más de 8 caracteres");
+                    return (numSucc === 4);
+                }
+
+                if ($('#Password').val().match(/^.*[0-9]+.*$/) !== null) {
+                    numSucc = numSucc + 1;
+                   
+                } else {
+                    confirm("Su password debe contener al menos un digito");
+                    return (numSucc === 4);
+                }
+
+                if ($('#Password').val().match(/^.*['~!@@#$%^&*?:;"<>,\._\-|\\/+=\(\){}\[\]]+.*$/) !== null) {
+                    numSucc = numSucc + 1;
+                    
+                } else {
+
+                    confirm("Su password debe contener al menos un caracter especial");
+                    return (numSucc === 4);
+                }
+
+                if ($('#Password').val().match(/^.*[A-Z]+.*$/) !== null) {
+                    numSucc = numSucc + 1;
+                  
+                } else {
+                    confirm("Su password debe contener al menos un letra mayuscula");
+                    return (numSucc === 4);
+                }
+            }
+            else {
+                $('#RqLen').css("color", "#e74c3c");
+                $('#RqNum').css("color", "#e74c3c");
+                $('#RqSpecial').css("color", "#e74c3c");
+                $('#RqUpper').css("color", "#e74c3c");
+            }
+
+            return (numSucc === 4);
+        }
+       
+    </script>
+</body>
+
+</html>
+
+
+

@@ -1,0 +1,325 @@
+﻿
+@{
+    ViewBag.Title = "About";
+}
+<html>
+<head>
+
+    <link href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container">
+        <div class="row main">
+            <div class="panel-heading">
+                <div class="panel-title text-center">
+                    <button type="button" class="btn btn-primary" id="btnAlta" onclick="Alta();">Dar Alta Medicamento</button>
+                </div>
+            </div>
+            <div class="panel-heading">
+                <table id="MiTabla" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>IdMedicamento</th>
+                            <th>Nombre</th>
+                            <th>Concentracion</th>
+                            <th>Precio</th>
+                            <th>Presentacion</th>
+                            <th>Habilitado</th>
+                            <th>Acciones</th>
+                            <th>IdFormaFarmaucetica</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    @*<button type="button" class="close" data-dissmiss="modal"><span aria-hidden="true">&times;</span></button>*@
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="IdMedicamento">IdMedicamento</label>
+                            <input type="text" class="form-control" id="IdMedicamento" placeholder="IdMedicamento" disabled="disabled" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Nombre">Nombre</label>
+                            <input type="text" class="form-control" id="Nombre" placeholder="Nombre" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Concentracion">Concentracion</label>
+                            <input type="text" class="form-control" id="Concentracion" placeholder="Concentracion" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Precio">Precio</label>
+                            <input type="text" class="form-control" id="Precio" placeholder="Precio" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Presentacion">Presentacion</label>
+                            <input type="text" class="form-control" id="Presentacion" placeholder="Presentacion" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Habilitado">Habilitado</label>
+                            <input type="text" class="form-control" id="Habilitado" placeholder="Habilitado" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Acciones">Acciones</label>
+                            <input type="text" class="form-control" id="Acciones" placeholder="Acciones" />
+                        </div>
+                        <div class="form-group">
+                            <label for="IdFormaFarmaucetica">IdFormaFarmaucetica</label>
+                            <input type="text" class="form-control" id="IdFormaFarmaucetica" placeholder="IdFormaFarmaucetica" />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnAdd" onclick="return Add();">Alta</button>
+                    <button type="button" class="btn btn-primary" id="btnUpdate" style="display:none;" onclick="Update();">Actualizar</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" type="text/javascript"></script>
+    <script src="~/Scripts/dataTables.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            loadData();
+        });
+
+        function Alta() {
+            $('#myModal').modal('show');
+            $('#btnAdd').show();
+        }
+
+        function Delele(ID, Nombre) {
+            var ans = confirm("¿Esta Seguro de eliminar el medicamento: " + Nombre+ " ?");
+            if (ans) {
+                $.ajax({
+                    url: "/Home/EliminarMedicamento",
+                    type: "POST",
+                    data: { IdUsuario: ID},
+                    success: function (result) {
+                        loadData();
+                    },
+                    error: function (errormessage) {
+                        alert(errormessage.responseText);
+                    }
+                });
+            }
+        }
+
+        function Add() {
+            var res = validate();
+            if (res == false) {
+                return false;
+            }
+
+           
+
+            var empObj = {
+                Nombre: $('#Nombre').val(),
+                Concentracion: $('#Concentracion').val(),
+                Precio: $('#Precio').val(),
+                Presentacion: $('#Presentacion').val(),
+                Acciones: $('#Acciones').val(),
+                Habilitado: $('#Habilitado').val(),
+                IdFormaFarmaucetica: $('#IdFormaFarmaucetica').val()
+
+            };
+            //console.log(JSON.stringify(empObj));
+            $.ajax({
+                url: "/Home/AltaMedicamento",
+                data: empObj,
+                type: "POST",
+               // contentType: "application/json;charset=utf-8",
+               // dataType: "json",
+                success: function (result) {
+                //    loadData();
+                    $('#myModal').modal('hide');
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+        }
+
+        function Update() {
+            var res = validate();
+            if (res == false) {
+                return false;
+            }
+            var empObj = {
+                IdMedicamento: $('#IdMedicamento').val(),
+                Nombre: $('#Nombre').val(),
+                Usuario: $('#Concentracion').val(),
+                Password: $('#Precio').val(),
+                Estatus: $('#Presentacion').val(),
+                Acciones: $('#Acciones').val(),
+                Habilitado: $('#Habilitado').val(),
+                IdFormaFarmaucetica: $('#IdFormaFarmaucetica').val()
+            };
+            $.ajax({
+                url: "/Home/ActualizacionMedicamento",
+                data: empObj,
+                type: "POST",
+                success: function (result) {
+
+                    $('#myModal').modal('hide');
+                    $('#IdMedicamento').val("");
+                    $('#Nombre').val("");
+                    $('#Concentracion').val("");
+                    $('#Precio').val("");
+                    $('#Presentacion').val("");
+                    $('#Acciones').val("");
+                    $('#Habilitado').val("");
+                    $('#IdFormaFarmaucetica').val("");
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+        }
+
+        function validate() {
+
+            var isValid = true;
+            if ($('#Nombre').val().trim() == "") {
+                $('#Nombre').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Nombre').css('border-color', 'lightgrey');
+            }
+            if ($('#Concentracion').val().trim() == "") {
+                $('#Concentracion').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Concentracion').css('border-color', 'lightgrey');
+            }
+            if ($('#Precio').val().trim() == "") {
+                $('#Precio').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Precio').css('border-color', 'lightgrey');
+            }
+            if ($('#Presentacion').val().trim() == "") {
+                $('#Presentacion').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Presentacion').css('border-color', 'lightgrey');
+            }
+            if ($('#Acciones').val().trim() == "") {
+                $('#Acciones').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Acciones').css('border-color', 'lightgrey');
+            }
+            if ($('#Habilitado').val().trim() == "") {
+                $('#Habilitado').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#Habilitado').css('border-color', 'lightgrey');
+            }
+            if ($('#IdFormaFarmaucetica').val().trim() == "") {
+                $('#IdFormaFarmaucetica').css('border-color', 'Red');
+                isValid = false;
+            }
+            else {
+                $('#IdFormaFarmaucetica').css('border-color', 'lightgrey');
+            }
+            return isValid;
+        }
+
+        function loadData() {           
+            var table = new DataTable('#MiTabla', {
+                lengthMenu: [[10], [10]],
+                "processing": true,
+                "serverSide": true,
+                ajax: {
+                    type: "POST",
+                    url: "/Home/ListMedicamentos",
+                    dataType: "json",
+                },
+                "pageLength": 10,
+                "filter": true,
+                "data": null,
+                "columns": [
+                    { "data": "IdMedicamento" },
+                    { "data": "Nombre" },
+                    { "data": "Concentracion" },
+                    { "data": "Precio" },
+                    { "data": "Presentacion" },
+                    { "data": "Habilitado" },
+                    { "data": "Acciones" },
+                    { "data": "IdFormaFarmaucetica" },
+                    {
+                        defaultContent: '<input type="button" class="Editar" value="Editar"/><input type="button" class="Eliminar" value="Eliminar"/>'
+
+                    },
+                    /* {
+                         "defaultContent": "<td>data.IdUsuario <a href=\"#\" onclick=\"return getbyID()\">Editar</a> | <a href=\"#\" onclick=\"Borrar(' + item.EmployeeID + ')\">Borrar</a></td>"
+                         //    "<button id = 'teste' type= 'button' class = 'btn btn-ligth-primary'>Prueba</button>"
+                     },*/
+
+                ],
+                "language": {
+                    "url": "http://cdn.datatables.net/plug-ins/9dcbecd42ad/i18n/Spanish.json"
+                }
+
+            });
+
+            $('#MiTabla tbody').on('click', '.Editar', function () {
+
+                var row = $(this).closest('tr');
+
+                //  var data = table.row(row).data().IdUsuario;
+
+                $('#IdMedicamento').val(table.row(row).data().IdMedicamento);
+                $('#Nombre').val(table.row(row).data().Nombre);
+                $('#Presentacion').val(table.row(row).data().Presentacion);
+                $('#Concentracion').val(table.row(row).data().Concentracion);
+                $('#Precio').val(table.row(row).data().Precio);
+                $('#Habilitado').val(table.row(row).data().Habilitado);
+                $('#Acciones').val(table.row(row).data().Acciones);
+                $('#IdFormaFarmaucetica').val(table.row(row).data().IdFormaFarmaucetica);
+                $('#myModalLabel').val("Editar Usuario");
+
+                $('#myModal').modal('show');
+                $('#btnUpdate').show();
+                $('#btnAdd').hide();
+            });
+
+
+            $('#MiTabla tbody').on('click', '.Eliminar', function () {
+                var row = $(this).closest('tr');
+
+                //var data = table.row(row).data().IdUsuario;
+                Delele(table.row(row).data().IdMedicamento, table.row(row).data().Nombre)
+            });
+        }
+
+
+       
+
+
+    </script>
+</body>
+
+</html>
+
+
+
+
+
